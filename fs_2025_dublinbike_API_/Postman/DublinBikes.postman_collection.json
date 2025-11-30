@@ -1,0 +1,188 @@
+﻿{
+  "info": {
+    "name": "DublinBikes API Full",
+    "_postman_id": "dublinbikes-full",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Ping",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/ping",
+          "host": [ "localhost" ],
+          "port": "5000",
+          "path": [ "ping" ]
+        }
+      }
+    },
+    {
+      "name": "V1 - Get Stations",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/stations",
+          "host": [ "localhost" ],
+          "port": "5000",
+          "path": [ "api", "v1", "stations" ]
+        }
+      }
+    },
+    {
+      "name": "V1 - Station by number",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/stations/1",
+          "host": [ "localhost" ],
+          "port": "5000",
+          "path": [ "api", "v1", "stations", "1" ]
+        }
+      }
+    },
+    {
+      "name": "V1 - POST Station",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"101\",\n  \"partitionKey\": \"101\",\n  \"number\": 101,\n  \"contract_name\": \"dublin\",\n  \"name\": \"TEST STATION V1\",\n  \"address\": \"101 File St\",\n  \"position\": {\"lat\": 53.34,\"lng\": -6.26},\n  \"banking\": true,\n  \"bonus\": true,\n  \"bike_stands\": 10,\n  \"available_bike_stands\": 10,\n  \"available_bikes\": 0,\n  \"status\": \"OPEN\",\n  \"last_update\": 1700000000\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v1/stations",
+          "host": [ "localhost" ],
+          "port": "5000",
+          "path": [ "api", "v1", "stations" ]
+        }
+      }
+    },
+    {
+      "name": "V1 - PUT Station",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"101\",\n  \"partitionKey\": \"101\",\n  \"number\": 101,\n  \"contract_name\": \"dublin\",\n  \"name\": \"TEST STATION V1 UPDATED\",\n  \"address\": \"101 File St\",\n  \"position\": {\"lat\": 53.34,\"lng\": -6.26},\n  \"banking\": true,\n  \"bonus\": true,\n  \"bike_stands\": 10,\n  \"available_bike_stands\": 5,\n  \"available_bikes\": 5,\n  \"status\": \"OPEN\",\n  \"last_update\": 1700001000\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v1/stations/101",
+          "host": [ "localhost" ],
+          "port": "5000",
+          "path": [ "api", "v1", "stations", "101" ]
+        }
+      }
+    },
+    {
+      "name": "V1 - Summary",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/stations/summary",
+          "host": [ "localhost" ],
+          "port": "5000",
+          "path": [ "api", "v1", "stations", "summary" ]
+        }
+      }
+    },
+    {
+      "name": "V2 - Get Stations",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v2/stations",
+          "host": [ "localhost" ],
+          "port": "5000",
+          "path": [ "api", "v2", "stations" ]
+        }
+      }
+    },
+    {
+      "name": "V2 - Station by number",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v2/stations/999",
+          "host": [ "localhost" ],
+          "port": "5000",
+          "path": [ "api", "v2", "stations", "999" ]
+        }
+      }
+    },
+    {
+      "name": "V2 - POST Station",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"999\",\n  \"partitionKey\": \"999\",\n  \"number\": 999,\n  \"contract_name\": \"dublin\",\n  \"name\": \"TEST STATION COSMOS\",\n  \"address\": \"123 Test St\",\n  \"position\": {\"lat\": 53.345,\"lng\": -6.26},\n  \"banking\": true,\n  \"bonus\": true,\n  \"bike_stands\": 10,\n  \"available_bike_stands\": 10,\n  \"available_bikes\": 0,\n  \"status\": \"OPEN\",\n  \"last_update\": 1700000000\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v2/stations",
+          "host": [ "localhost" ],
+          "port": "5000",
+          "path": [ "api", "v2", "stations" ]
+        }
+      }
+    },
+    {
+      "name": "V2 - PUT Station",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"999\",\n  \"partitionKey\": \"999\",\n  \"number\": 999,\n  \"contract_name\": \"dublin\",\n  \"name\": \"TEST STATION COSMOS UPDATED\",\n  \"address\": \"123 Test St\",\n  \"position\": {\"lat\": 53.345,\"lng\": -6.26},\n  \"banking\": true,\n  \"bonus\": true,\n  \"bike_stands\": 10,\n  \"available_bike_stands\": 5,\n  \"available_bikes\": 5,\n  \"status\": \"OPEN\",\n  \"last_update\": 1700001000\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v2/stations/999",
+          "host": [ "localhost" ],
+          "port": "5000",
+          "path": [ "api", "v2", "stations", "999" ]
+        }
+      }
+    },
+    {
+      "name": "V2 - Summary",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v2/stations/summary",
+          "host": [ "localhost" ],
+          "port": "5000",
+          "path": [ "api", "v2", "stations", "summary" ]
+        }
+      }
+    }
+  ]
+}
