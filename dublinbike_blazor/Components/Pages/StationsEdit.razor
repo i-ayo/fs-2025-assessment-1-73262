@@ -1,0 +1,277 @@
+﻿@using dublinbike_blazor.Models
+
+<div class="modal-overlay" @onclick="HandleOverlayClick">
+    <div class="modal-content" @onclick:stopPropagation="true" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+        <header class="modal-header">
+            <h2 id="modal-title">@(IsNew ? "Add New Station" : $"Edit Station #{editModel.Number}")</h2>
+            <button class="btn-close-lg" @onclick="HandleCancel" aria-label="Close">✕</button>
+        </header>
+
+        <div class="modal-body">
+            <form @onsubmit="HandleSubmit" @onsubmit:preventDefault="true">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="station-number" class="required">Station Number</label>
+                        <input id="station-number"
+                               type="number"
+                               class="form-input"
+                               @bind="editModel.Number"
+                               required
+                               disabled="@(!IsNew)"
+                               min="1"
+                               aria-required="true" />
+                        @if (!IsNew)
+                        {
+                            <small class="form-hint">Station number cannot be changed</small>
+                        }
+                    </div>
+
+                    <div class="form-group">
+                        <label for="station-status" class="required">Status</label>
+                        <select id="station-status"
+                                class="form-input"
+                                @bind="editModel.Status"
+                                required
+                                aria-required="true">
+                            <option value="OPEN">OPEN</option>
+                            <option value="CLOSED">CLOSED</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="station-name" class="required">Station Name</label>
+                    <input id="station-name"
+                           type="text"
+                           class="form-input"
+                           @bind="editModel.Name"
+                           required
+                           maxlength="200"
+                           placeholder="e.g., Smithfield"
+                           aria-required="true" />
+                </div>
+
+                <div class="form-group">
+                    <label for="station-address" class="required">Address</label>
+                    <input id="station-address"
+                           type="text"
+                           class="form-input"
+                           @bind="editModel.Address"
+                           required
+                           maxlength="300"
+                           placeholder="e.g., North King Street"
+                           aria-required="true" />
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="station-lat" class="required">Latitude</label>
+                        <input id="station-lat"
+                               type="number"
+                               class="form-input"
+                               @bind="editModel.Lat"
+                               required
+                               step="0.000001"
+                               min="-90"
+                               max="90"
+                               placeholder="53.3498"
+                               aria-required="true" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="station-lng" class="required">Longitude</label>
+                        <input id="station-lng"
+                               type="number"
+                               class="form-input"
+                               @bind="editModel.Lng"
+                               required
+                               step="0.000001"
+                               min="-180"
+                               max="180"
+                               placeholder="-6.2603"
+                               aria-required="true" />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="station-capacity" class="required">Total Bike Stands</label>
+                        <input id="station-capacity"
+                               type="number"
+                               class="form-input"
+                               @bind="editModel.BikeStands"
+                               @bind:after="RecalculateStands"
+                               required
+                               min="1"
+                               max="200"
+                               aria-required="true" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="station-bikes" class="required">Available Bikes</label>
+                        <input id="station-bikes"
+                               type="number"
+                               class="form-input"
+                               @bind="editModel.AvailableBikes"
+                               @bind:after="RecalculateStands"
+                               required
+                               min="0"
+                               max="@editModel.BikeStands"
+                               aria-required="true" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Available Bike Stands (Calculated)</label>
+                    <div class="form-input-readonly">
+                        @editModel.AvailableBikeStands stands
+                    </div>
+                    <small class="form-hint">Auto-calculated: Total Stands - Available Bikes</small>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(validationError))
+                {
+                    <div class="alert alert-error" role="alert">
+                        ⚠️ @validationError
+                    </div>
+                }
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" @onclick="HandleCancel">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary" disabled="@(!IsValid())">
+                        @(IsNew ? "Create Station" : "Save Changes")
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public BikeStation? Station { get; set; }
+
+    [Parameter]
+    public bool IsNew { get; set; }
+
+    [Parameter]
+    public EventCallback<BikeStation> OnSave { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private BikeStation editModel = new();
+    private string? validationError;
+
+    protected override void OnParametersSet()
+    {
+        if (Station != null)
+        {
+            editModel = new BikeStation
+            {
+                id = Station.id,
+                Number = Station.Number,
+                ContractName = Station.ContractName,
+                Name = Station.Name,
+                Address = Station.Address,
+                Lat = Station.Lat,
+                Lng = Station.Lng,
+                BikeStands = Station.BikeStands,
+                AvailableBikes = Station.AvailableBikes,
+                AvailableBikeStands = Station.AvailableBikeStands,
+                Status = Station.Status
+            };
+        }
+
+        if (IsNew && string.IsNullOrEmpty(editModel.id))
+        {
+            editModel.ContractName = "dublin";
+            editModel.Status = "OPEN";
+        }
+    }
+
+    private void RecalculateStands()
+    {
+        editModel.AvailableBikeStands = Math.Max(0, editModel.BikeStands - editModel.AvailableBikes);
+
+        if (editModel.AvailableBikes > editModel.BikeStands)
+        {
+            editModel.AvailableBikes = editModel.BikeStands;
+            editModel.AvailableBikeStands = 0;
+        }
+    }
+
+    private bool IsValid()
+    {
+        validationError = null;
+
+        if (editModel.Number <= 0)
+        {
+            validationError = "Station number must be greater than 0";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(editModel.Name))
+        {
+            validationError = "Station name is required";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(editModel.Address))
+        {
+            validationError = "Address is required";
+            return false;
+        }
+
+        if (editModel.Lat < -90 || editModel.Lat > 90)
+        {
+            validationError = "Latitude must be between -90 and 90";
+            return false;
+        }
+
+        if (editModel.Lng < -180 || editModel.Lng > 180)
+        {
+            validationError = "Longitude must be between -180 and 180";
+            return false;
+        }
+
+        if (editModel.BikeStands <= 0)
+        {
+            validationError = "Total bike stands must be greater than 0";
+            return false;
+        }
+
+        if (editModel.AvailableBikes < 0 || editModel.AvailableBikes > editModel.BikeStands)
+        {
+            validationError = "Available bikes must be between 0 and total bike stands";
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (!IsValid()) return;
+
+        if (IsNew)
+        {
+            editModel.id = editModel.Number.ToString();
+        }
+
+        RecalculateStands();
+        await OnSave.InvokeAsync(editModel);
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+
+    private async Task HandleOverlayClick()
+    {
+        await HandleCancel();
+    }
+}

@@ -1,0 +1,56 @@
+﻿@using dublinbike_blazor.Models
+@using dublinbike_blazor.Services
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inject StationsApiClient Api
+
+@if (stations is null)
+{
+    <p>Loading…</p>
+}
+else if (!stations.Items.Any())
+{
+    <p>No stations match your filters.</p>
+}
+else
+{
+    <QuickGrid Items="stations!.Items.AsQueryable()" Context="s">
+        <PropertyColumn Property="x => x.Name" Title="Station" />
+        <PropertyColumn Property="x => x.Address" Title="Address" />
+
+        <TemplateColumn Title="Status" Context="s">
+            <div class="badge @(s.Status == "OPEN" ? "open" : "closed")"
+                 aria-label="Station status">
+                @s.Status
+            </div>
+        </TemplateColumn>
+
+        <TemplateColumn Title="Bikes/Stands" Context="s">
+            @($"{s.AvailableBikes} / {s.BikeStands}")
+        </TemplateColumn>
+    </QuickGrid>
+
+    <button class="btn" @onclick="LoadMore">Load more</button>
+}
+
+@code {
+    [Parameter] public string Search { get; set; } = "";
+    [Parameter] public string Status { get; set; } = "all";
+    [Parameter] public int MinBikes { get; set; } = 0;
+    [Parameter] public EventCallback<BikeStation> OnSelect { get; set; }
+
+    private PagedResult<BikeStation>? stations;
+    private int Page = 1;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        stations = await Api.GetStations(Search, Status, MinBikes, Page);
+    }
+
+    private async Task LoadMore()
+    {
+        if (stations is null) return;
+        Page++;
+        var nextPage = await Api.GetStations(Search, Status, MinBikes, Page);
+        stations.Items.AddRange(nextPage.Items);
+    }
+}
