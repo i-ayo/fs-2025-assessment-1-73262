@@ -436,31 +436,41 @@ Code
    ```bash
    git clone https://github.com/yourusername/dublinBikeFullStack.git
    cd dublinBikeFullStack
-Restore dependencies:
+   ```
 
+#### Restore dependencies:
+```
 bash
 dotnet restore
-Run the API project:
+```
 
+#### Run the API project:
+```
 bash
 cd fs_2025_dublinbike_API_
 dotnet run
 API will listen on https://localhost:5001.
+```
 
-Run the Blazor client:
+#### Run the Blazor client:
 
+```
 bash
+
 cd dublinBikeBlazor
 dotnet run
 Client will open at https://localhost:7257/stations.
-
+```
 API Integration
 The Blazor client communicates with the API using:
 
+```
 Code
 GET /api/v2/stations
-Supported query parameters:
+```
+##### Supported query parameters:
 
+```
 q — search term
 
 status — OPEN / CLOSED
@@ -474,22 +484,27 @@ dir — asc / desc
 page — page number
 
 pageSize — items per page
+```
+#### Example:
 
-Example:
-
+```
 Code
 GET https://localhost:5001/api/v2/stations?q=Clarendon&status=OPEN&sort=occupancy&dir=desc&page=2&pageSize=20
-Known Issues & Notes
+```
+---
+### Known Issues & Notes
 In Blazor Server, API requests are made server‑side and may not appear in the browser Network tab. Solution: API activity can be observed in the terminal logs:
 
+```
 Code
 [API Client] Fetching: api/v2/stations?page=1&pageSize=20&sort=number&dir=asc
 [API Client] Received 20 stations, Total: 230
 Filtering and sorting are implemented and visible in logs, but may not always produce dramatic visual changes due to dataset values (many stations have similar occupancy or status).
 
 Paging is correct: the API returns 20 items per page with a total count of 230.
-
-Project Structure
+```
+---
+## Project Structure
 
 ```
 dublinBikeBlazor/
@@ -523,6 +538,7 @@ fs_2025_dublinbike_API_/
 │  └─ BikeStation.cs
 └─ Program.cs
 ```
+---
+## License
 
-License
 This project is provided for educational purposes as part of coursework.
