@@ -419,9 +419,9 @@ This project demonstrates:
 ---
 
 ## Architecture
-
+```
 +-----------------------+ | Blazor UI (Pages) | +-----------------------+ | v +-----------------------+ | StationsApiClient | | (HttpClient wrapper) | +-----------------------+ | v +-----------------------+ | DublinBike REST API | | (V1 & V2 endpoints) | +-----------------------+ | v +-----------------------+ | BikeStationService | | (Filtering/Sorting) | +-----------------------+ | v +-----------------------+ | Repository Layer | | (File / Cosmos) | +-----------------------+
-
+```
 Code
 
 ---
@@ -490,7 +490,8 @@ Filtering and sorting are implemented and visible in logs, but may not always pr
 Paging is correct: the API returns 20 items per page with a total count of 230.
 
 Project Structure
-Code
+
+```
 dublinBikeBlazor/
 ├─ Pages/
 │  ├─ Stations.razor
@@ -508,7 +509,8 @@ dublinBikeBlazor/
 │  └─ css/
 ├─ Program.cs
 └─ README.md
-
+```
+```
 fs_2025_dublinbike_API_/
 ├─ Endpoints/
 │  └─ BikeStationsEndpoints.cs
@@ -520,6 +522,7 @@ fs_2025_dublinbike_API_/
 ├─ Models/
 │  └─ BikeStation.cs
 └─ Program.cs
+```
 
 License
 This project is provided for educational purposes as part of coursework.
