@@ -441,12 +441,14 @@ Code
 #### Restore dependencies:
 ```
 bash
+
 dotnet restore
 ```
 
 #### Run the API project:
 ```
 bash
+
 cd fs_2025_dublinbike_API_
 dotnet run
 API will listen on https://localhost:5001.
@@ -466,6 +468,7 @@ The Blazor client communicates with the API using:
 
 ```
 Code
+
 GET /api/v2/stations
 ```
 ##### Supported query parameters:
@@ -489,6 +492,7 @@ pageSize — items per page
 
 ```
 Code
+
 GET https://localhost:5001/api/v2/stations?q=Clarendon&status=OPEN&sort=occupancy&dir=desc&page=2&pageSize=20
 ```
 ---
@@ -497,6 +501,7 @@ In Blazor Server, API requests are made server‑side and may not appear in the 
 
 ```
 Code
+
 [API Client] Fetching: api/v2/stations?page=1&pageSize=20&sort=number&dir=asc
 [API Client] Received 20 stations, Total: 230
 Filtering and sorting are implemented and visible in logs, but may not always produce dramatic visual changes due to dataset values (many stations have similar occupancy or status).
