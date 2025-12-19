@@ -366,7 +366,7 @@ Both were developed as part of a full‑stack assignment.
 
 The DublinBike system simulates real‑time bike station availability in Dublin.  
 - The **API** exposes endpoints for querying, creating, updating, and deleting stations.  
-- The **Blazor client** provides a responsive web interface for browsing, filtering, sorting, and managing stations.
+- The **Blazor client** provides a responsive web interface for browsing, filtering, sorting, and managing stations with detail interaction.
 
 ---
 
@@ -374,11 +374,11 @@ The DublinBike system simulates real‑time bike station availability in Dublin.
 
 This project demonstrates:
 
-- Building a RESTful API with filtering, sorting, paging, and CRUD
-- Consuming the API from a Blazor Server application
-- Component‑based UI design using Razor
-- Clean separation of concerns (UI, services, DTOs, backend logic)
-- Integration with multi‑version endpoints (V1 file repo / V2 simulated Cosmos repo)
+- Building a RESTful API with **filtering, sorting, paging, and CRUD.**
+- Consuming the API from a **Blazor Server** application
+- **Component‑based UI design** using Razor
+- **Clean separation of concerns** (UI, services, DTOs, backend logic)
+- Integration with the V2 API endpoints (simulated Cosmos repository).
 - Professional GitHub documentation
 
 ---
@@ -393,15 +393,16 @@ This project demonstrates:
 - Summary statistics endpoint
 
 ### Blazor Client
-- Paginated list of bike stations
-- Search by name or address
-- Filter by status and minimum bikes
-- Sort by number, name, available bikes, or occupancy
-- Toggle ascending/descending
-- View station details
-- Create and update stations (admin functionality)
-- Delete stations
-- Responsive layout with Bootstrap
+- Paginated list of bike stations (master view).
+- Search stations by name or address (debounced).
+- Filter by **status** and **minimum bikes**.
+- Sort by number, name, available bikes, or occupancy; toggle ascending/descending.
+- View station details in a side panel (detail view).
+-  or create stations using a modal form.
+- Delete stations.
+- Responsive layout built with Bootstrap 5.
+- URL state preservation for filters, sorting, and paging.
+- Accessible UI: icons, badges, keyboard focus, readable labels.
 
 ---
 
@@ -420,9 +421,37 @@ This project demonstrates:
 
 ## Architecture
 ```
-+-----------------------+ | Blazor UI (Pages) | +-----------------------+ | v +-----------------------+ | StationsApiClient | | (HttpClient wrapper) | +-----------------------+ | v +-----------------------+ | DublinBike REST API | | (V1 & V2 endpoints) | +-----------------------+ | v +-----------------------+ | BikeStationService | | (Filtering/Sorting) | +-----------------------+ | v +-----------------------+ | Repository Layer | | (File / Cosmos) | +-----------------------+
++-----------------------+
+| Blazor UI (Pages)     |
++-----------------------+
+          |
+          v
++-----------------------+
+| StationsApiClient     |
+| (HttpClient wrapper)  |
++-----------------------+
+          |
+          v
++-----------------------+
+| DublinBike REST API   |
+| (V2 endpoints only)   |
++-----------------------+
+          |
+          v
++-----------------------+
+| BikeStationService    |
+| (Filtering/Sorting)   |
++-----------------------+
+          |
+          v
++-----------------------+
+| Repository Layer      |
+| (Simulated Cosmos DB) |
++-----------------------+
 ```
-Code
+
+- Components are organized for separation of concerns: UI → API client → service → repository.
+- The Blazor client is component-based, with `StationListItem`, `StationFilters`, `StationDetail`, and `StationEditModal components`.
 
 ---
 
@@ -432,82 +461,70 @@ Code
 - .NET 6 SDK
 
 ### Steps
-1. Clone the repository:
-   ```bash
+#### 1. Clone the repository:
+   ```
    git clone https://github.com/yourusername/dublinBikeFullStack.git
    cd dublinBikeFullStack
    ```
 
-#### Restore dependencies:
+#### 2. Restore dependencies:
 ```
-bash
-
 dotnet restore
 ```
 
-#### Run the API project:
+#### 3. Run the API project:
 ```
-bash
-
 cd fs_2025_dublinbike_API_
 dotnet run
-API will listen on https://localhost:5001.
 ```
+- API will listen on ```https://localhost:5001```.
 
-#### Run the Blazor client:
+#### 4. Run the Blazor client:
 
 ```
-bash
-
 cd dublinBikeBlazor
 dotnet run
-Client will open at https://localhost:7257/stations.
 ```
-API Integration
+- Client will open at ```https://localhost:7257/stations```.
+
+---
+### API Integration
 The Blazor client communicates with the API using:
 
+###### Endpoint
 ```
-Code
-
 GET /api/v2/stations
 ```
 ##### Supported query parameters:
 
-```
-q — search term
+| Parameter  | Description                             |
+| ---------- | --------------------------------------- |
+| `q`        | Search term (name or address)           |
+| `status`   | OPEN / CLOSED                           |
+| `minBikes` | Minimum available bikes                 |
+| `sort`     | number, name, availableBikes, occupancy |
+| `dir`      | asc / desc                              |
+| `page`     | Page number                             |
+| `pageSize` | Items per page                          |
 
-status — OPEN / CLOSED
 
-minBikes — minimum available bikes
-
-sort — number, name, availableBikes, occupancy
-
-dir — asc / desc
-
-page — page number
-
-pageSize — items per page
-```
 #### Example:
 
 ```
-Code
-
 GET https://localhost:5001/api/v2/stations?q=Clarendon&status=OPEN&sort=occupancy&dir=desc&page=2&pageSize=20
 ```
+
+
 ---
 ### Known Issues & Notes
-In Blazor Server, API requests are made server‑side and may not appear in the browser Network tab. Solution: API activity can be observed in the terminal logs:
-
+- In Blazor Server, API requests are made server-side and may not appear in the browser Network tab. Check the terminal logs for API activity:
 ```
-Code
-
 [API Client] Fetching: api/v2/stations?page=1&pageSize=20&sort=number&dir=asc
 [API Client] Received 20 stations, Total: 230
-Filtering and sorting are implemented and visible in logs, but may not always produce dramatic visual changes due to dataset values (many stations have similar occupancy or status).
-
-Paging is correct: the API returns 20 items per page with a total count of 230.
 ```
+- Filtering and sorting are implemented and visible in logs, but may not always produce dramatic visual changes due to dataset values (many stations have similar occupancy or status).
+- Paging is correct: the API returns 20 items per page with a total count of 230.
+  
 ---
 ## Project Structure
 
@@ -529,8 +546,7 @@ dublinBikeBlazor/
 │  └─ css/
 ├─ Program.cs
 └─ README.md
-```
-```
+
 fs_2025_dublinbike_API_/
 ├─ Endpoints/
 │  └─ BikeStationsEndpoints.cs
@@ -543,7 +559,9 @@ fs_2025_dublinbike_API_/
 │  └─ BikeStation.cs
 └─ Program.cs
 ```
+
+
 ---
 ## License
 
-This project is provided for educational purposes as part of coursework.
+This project is provided **for educational purposes** as part of coursework.
