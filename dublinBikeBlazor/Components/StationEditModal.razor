@@ -1,5 +1,15 @@
 ﻿@using dublinBikeBlazor.DTO
 
+@*
+   StationEditModal.razor
+   Role: Reusable modal form component for creating and editing stations
+   Responsibility:
+   - Manages local form state and validation
+   - Emits save/cancel events to parent
+   - Does NOT perform API calls or navigation
+*@
+
+
 <div class="modal-overlay" @onclick="HandleOverlayClick">
     <div class="modal-dialog" @onclick:stopPropagation="true">
         <div class="modal-content">
@@ -161,6 +171,7 @@
 </div>
 
 @code {
+    
     [Parameter] public BikeStationDto? Station { get; set; }
     [Parameter] public bool IsNew { get; set; }
     [Parameter] public EventCallback<BikeStationDto> OnSave { get; set; }

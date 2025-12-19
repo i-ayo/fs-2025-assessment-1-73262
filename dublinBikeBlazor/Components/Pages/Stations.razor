@@ -9,6 +9,15 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 
+@* 
+   Stations.razor
+   Role: Page-level container (Master/Detail shell)
+   Responsibilities:
+   - Coordinates filters, sorting, paging, and selection state
+   - Delegates rendering to child components (list, detail, filters, modal)
+   - Orchestrates API calls via StationsApiClient
+*@
+
 <PageTitle>Dublin Bikes – Stations</PageTitle>
 
 <div class="page-container">
@@ -129,6 +138,10 @@
 }
 
 @code {
+
+    // Page-level state owner:
+    // Holds UI state (filters, paging, selection)
+    // Child components are stateless and communicate via callbacks
     private List<BikeStationDto> stations = new();
     private BikeStationDto? selectedStation;
     private bool isLoading = true;
@@ -151,7 +164,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // ✅ LOAD STATE FROM URL (Missing in your version)
+        // LOAD STATE FROM URL (Missing in your version)
         LoadStateFromUrl();
         await ReloadStationsAsync();
     }
@@ -164,14 +177,8 @@
         try
         {
             var result = await ApiClient.GetStationsAsync(
-                searchText,
-                statusFilter,
-                minBikes,
-                page,
-                pageSize,
-                sort,
-                dir);
-
+                searchText, statusFilter, minBikes, 
+                page, pageSize, sort, dir);
             
             totalStations = result.TotalCount;
             stations = result.Items.ToList();
@@ -190,7 +197,7 @@
     {
         searchText = string.IsNullOrWhiteSpace(value) ? null : value;
         page = 1;
-        UpdateUrl(); // ✅ UPDATE URL
+        UpdateUrl(); // UPDATE URL
         await ReloadStationsAsync();
     }
 
@@ -198,7 +205,7 @@
     {
         statusFilter = value;
         page = 1;
-        UpdateUrl(); // ✅ UPDATE URL
+        UpdateUrl(); 
         await ReloadStationsAsync();
     }
 
@@ -206,7 +213,7 @@
     {
         minBikes = value;
         page = 1;
-        UpdateUrl(); // ✅ UPDATE URL
+        UpdateUrl();
         await ReloadStationsAsync();
     }
 
@@ -216,14 +223,14 @@
         statusFilter = null;
         minBikes = null;
         page = 1;
-        UpdateUrl(); // ✅ UPDATE URL
+        UpdateUrl(); 
         await ReloadStationsAsync();
     }
 
     private async Task ApplySort()
     {
         page = 1;
-        UpdateUrl(); // ✅ UPDATE URL
+        UpdateUrl();
         await ReloadStationsAsync();
     }
 
@@ -231,14 +238,14 @@
     {
         dir = dir == "asc" ? "desc" : "asc";
         page = 1;
-        UpdateUrl(); // ✅ UPDATE URL
+        UpdateUrl(); 
         await ReloadStationsAsync();
     }
 
     private async Task NextPage()
     {
         page++;
-        UpdateUrl(); // ✅ UPDATE URL
+        UpdateUrl(); 
         await ReloadStationsAsync();
     }
 
@@ -247,7 +254,7 @@
         if (page > 1)
         {
             page--;
-            UpdateUrl();  
+            UpdateUrl(); 
             await ReloadStationsAsync();
         }
     }
@@ -333,13 +340,15 @@
         }
     }
 
+    // Hide and clear edit modal state
     private void HideModal()
     {
         showEditModal = false;
         editingStation = null;
     }
 
-    // URL STATE MANAGEMENT
+    // ----- URL STATE MANAGEMENT -----
+    // Read query string parameters and populate component state
     private void LoadStateFromUrl()
     {
         var uri = new Uri(Navigation.Uri);
@@ -359,6 +368,7 @@
             dir = d;
     }
 
+    // Construct a query string from current state and navigate (replace history)
     private void UpdateUrl()
     {
         var queryParams = new Dictionary<string, string?>
@@ -366,6 +376,7 @@
             ["q"] = searchText,
             ["status"] = statusFilter,
             ["minBikes"] = minBikes?.ToString(),
+            // Only include page when it's greater than 1 to keep URL clean
             ["page"] = page > 1 ? page.ToString() : null,
             ["sort"] = sort,
             ["dir"] = dir

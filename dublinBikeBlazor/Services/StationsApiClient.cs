@@ -12,6 +12,7 @@ namespace dublinBikeBlazor.Services
             _http = http;
         }
 
+        // Get paged list of stations with optional filters, sorting, and paging
         public async Task<PagedResult<BikeStationDto>> GetStationsAsync(
             string? search = null,
             string? status = null,
@@ -21,6 +22,7 @@ namespace dublinBikeBlazor.Services
             string? sort = null,
             string? dir = null)
         {
+            // BUILD QUERY PARAMETERS
             var queryParams = new List<string>
             {
                 $"page={page}",
@@ -36,13 +38,13 @@ namespace dublinBikeBlazor.Services
             if (minBikes.HasValue && minBikes > 0)
                 queryParams.Add($"minBikes={minBikes}");
 
-            // ✅ ADD SORT PARAMETERS
+            // ADD SORT PARAMETERS
             if (!string.IsNullOrWhiteSpace(sort))
                 queryParams.Add($"sort={Uri.EscapeDataString(sort)}");
 
             if (!string.IsNullOrWhiteSpace(dir))
                 queryParams.Add($"dir={Uri.EscapeDataString(dir)}");
-
+            
             var query = string.Join("&", queryParams);
             var url = $"api/v2/stations?{query}";
 
@@ -71,6 +73,7 @@ namespace dublinBikeBlazor.Services
             }
         }
 
+        // Get single station by id
         public async Task<BikeStationDto?> GetStationAsync(string id)
         {
             try
@@ -85,6 +88,7 @@ namespace dublinBikeBlazor.Services
             }
         }
 
+        // Create new station
         public async Task<bool> CreateStationAsync(BikeStationDto station)
         {
             try
@@ -109,6 +113,7 @@ namespace dublinBikeBlazor.Services
                     status = station.Status
                 };
 
+                // Send POST request to create
                 var response = await _http.PostAsJsonAsync("api/v2/stations", apiModel);
                 var success = response.IsSuccessStatusCode;
                 Console.WriteLine($"[API Client] Create result: {success}");
@@ -145,6 +150,7 @@ namespace dublinBikeBlazor.Services
                     status = station.Status
                 };
 
+                // Send PUT request to update
                 var response = await _http.PutAsJsonAsync($"api/v2/stations/{station.Number}", apiModel);
                 var success = response.IsSuccessStatusCode;
                 Console.WriteLine($"[API Client] Update result: {success}");
@@ -152,11 +158,13 @@ namespace dublinBikeBlazor.Services
             }
             catch (Exception ex)
             {
+                // Log error
                 Console.WriteLine($"[API Client ERROR] UpdateStation: {ex.Message}");
                 return false;
             }
         }
 
+        // Delete station by id
         public async Task<bool> DeleteStationAsync(string id)
         {
             try

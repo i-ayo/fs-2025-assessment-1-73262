@@ -12,7 +12,7 @@
         public double Lat { get; set; }
         public double Lng { get; set; }
 
-        // 🔥 Virtual joined position (UI only)
+        // Virtual joined position (UI only)
         public (double Lat, double Lng) Position
             => (Lat, Lng);
 

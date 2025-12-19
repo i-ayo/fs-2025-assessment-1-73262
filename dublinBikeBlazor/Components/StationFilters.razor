@@ -1,5 +1,16 @@
 ﻿@using System.Timers
 
+@*
+   StationFilters.razor
+   Role: Stateless filter UI component
+   Responsibility:
+   - Captures user filter input (search, status, min bikes)
+   - Debounces text search input for performance
+   - Emits filter changes to parent via callbacks
+   - Does NOT fetch data or manage application state
+*@
+
+
 <div class="filters-container">
     <h3>Filters</h3>
 

@@ -1,5 +1,15 @@
 ﻿@using dublinBikeBlazor.DTO
 
+@*
+   StationListItem.razor
+   Role: Presentational list item in the master list
+   Responsibility:
+   - Displays a single station summary (name, status, availability)
+   - Emits user actions (select, edit, delete) via callbacks
+   - Remains stateless and reusable
+*@
+
+
 <div class="station-card @(IsSelected ? "selected" : "")" 
      @onclick="OnClick"
      tabindex="0">

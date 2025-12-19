@@ -1,5 +1,6 @@
 ﻿namespace dublinBikeBlazor.DTO
 {
+    // Summary statistics for bike stations
     public class StationSummary
     {
         public int TotalStations { get; set; }
