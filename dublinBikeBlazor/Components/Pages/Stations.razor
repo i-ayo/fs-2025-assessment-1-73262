@@ -1,0 +1,378 @@
+﻿@page "/stations"
+
+@using dublinBikeBlazor.DTO
+@using dublinBikeBlazor.Services
+@using dublinBikeBlazor.Components
+@using Microsoft.AspNetCore.WebUtilities
+
+@inject IStationsApiClient ApiClient
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Dublin Bikes – Stations</PageTitle>
+
+<div class="page-container">
+    <header class="page-header">
+        <h1>Dublin Bike Stations</h1>
+        <p class="subtitle">Real-time bike availability</p>
+    </header>
+
+    <div class="layout">
+        <!-- FILTERS -->
+        <aside class="filters">
+            <StationFilters SearchText="@searchText"
+                            StatusFilter="@statusFilter"
+                            MinBikes="@minBikes"
+                            OnSearchChanged="OnSearchChanged"
+                            OnStatusChanged="OnStatusChanged"
+                            OnMinBikesChanged="OnMinBikesChanged"
+                            OnClearFilters="ClearFilters" />
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="content">
+            @if (isLoading)
+            {
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading stations…</p>
+                </div>
+            }
+            else if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="alert alert-danger">
+                    ⚠️ <strong>Error:</strong> @errorMessage
+                    <button class="btn-sm float-end" @onclick="() => errorMessage = null">✕</button>
+                </div>
+            }
+            else if (!stations.Any())
+            {
+                <div class="empty-state">
+                    <span class="icon">🚲</span>
+                    <p>No stations found. Try adjusting your filters.</p>
+                </div>
+            }
+            else
+            {
+                <!-- Results Header -->
+                <div class="results-header">
+                    <span>Showing <strong>@stations.Count</strong> of <strong>@totalStations</strong> stations</span>
+
+                    <div class="sort-controls">
+                        <label for="sort-select">Sort:</label>
+                        <select id="sort-select" @bind="sort" @bind:after="ApplySort" class="form-select-sm">
+                            <option value="number">Number</option>
+                            <option value="name">Name</option>
+                            <option value="availablebikes">Available Bikes</option>
+                            <option value="occupancy">Occupancy</option>
+                        </select>
+                        <button class="btn-icon" @onclick="ChangeSortDirection" title="@(dir == "asc" ? "Ascending" : "Descending")">
+                            @(dir == "asc" ? "⬆️" : "⬇️")
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Station Grid -->
+                <div class="station-grid">
+                    @foreach (var s in stations)
+                    {
+                        <StationListItem Station="@s"
+                                         IsSelected="@(selectedStation?.Number == s.Number)"
+                                         OnClick="@(() => SelectStation(s))"
+                                         OnEdit="@(() => EditStation(s))"
+                                         OnDelete="@(() => DeleteStation(s))" />
+                    }
+                </div>
+
+                <!-- PAGINATION -->
+                @if (totalStations > pageSize)
+                {
+                    <div class="pagination">
+                        <button class="btn btn-secondary"
+                                disabled="@(page <= 1)"
+                                @onclick="PrevPage">
+                            ← Prev
+                        </button>
+                        <span class="page-info">
+                            Page <strong>@(page)</strong> of <strong>@((int)Math.Ceiling((double)totalStations / pageSize))</strong>
+                        </span>
+                        <button class="btn btn-secondary"
+                                disabled="@(page * pageSize >= totalStations)"
+                                @onclick="NextPage">
+                            Next →
+                        </button>
+                    </div>
+                }
+            }
+        </main>
+
+        <!-- DETAIL PANEL -->
+        @if (selectedStation is not null)
+        {
+            <aside class="details">
+                <StationDetail Station="@selectedStation"
+                               OnClose="ClearSelection"
+                               OnEdit="@(() => EditStation(selectedStation))"
+                               OnDelete="@(() => DeleteStation(selectedStation))" />
+            </aside>
+        }
+    </div>
+</div>
+
+<!-- EDIT/CREATE MODAL -->
+@if (showEditModal && editingStation is not null)
+{
+    <StationEditModal Station="@editingStation"
+                      IsNew="@isNewStation"
+                      OnSave="HandleSave"
+                      OnCancel="HideModal" />
+}
+
+@code {
+    private List<BikeStationDto> stations = new();
+    private BikeStationDto? selectedStation;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    private string? searchText;
+    private string? statusFilter;
+    private int? minBikes;
+
+    private string sort = "number";
+    private string dir = "asc";
+
+    private int page = 1;
+    private int pageSize = 20;
+    private int totalStations;
+
+    private bool showEditModal = false;
+    private BikeStationDto? editingStation;
+    private bool isNewStation = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // ✅ LOAD STATE FROM URL (Missing in your version)
+        LoadStateFromUrl();
+        await ReloadStationsAsync();
+    }
+
+    private async Task ReloadStationsAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var result = await ApiClient.GetStationsAsync(
+                searchText,
+                statusFilter,
+                minBikes,
+                page,
+                pageSize,
+                sort,
+                dir);
+
+            
+            totalStations = result.TotalCount;
+            stations = result.Items.ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load stations: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task OnSearchChanged(string value)
+    {
+        searchText = string.IsNullOrWhiteSpace(value) ? null : value;
+        page = 1;
+        UpdateUrl(); // ✅ UPDATE URL
+        await ReloadStationsAsync();
+    }
+
+    private async Task OnStatusChanged(string? value)
+    {
+        statusFilter = value;
+        page = 1;
+        UpdateUrl(); // ✅ UPDATE URL
+        await ReloadStationsAsync();
+    }
+
+    private async Task OnMinBikesChanged(int? value)
+    {
+        minBikes = value;
+        page = 1;
+        UpdateUrl(); // ✅ UPDATE URL
+        await ReloadStationsAsync();
+    }
+
+    private async Task ClearFilters()
+    {
+        searchText = null;
+        statusFilter = null;
+        minBikes = null;
+        page = 1;
+        UpdateUrl(); // ✅ UPDATE URL
+        await ReloadStationsAsync();
+    }
+
+    private async Task ApplySort()
+    {
+        page = 1;
+        UpdateUrl(); // ✅ UPDATE URL
+        await ReloadStationsAsync();
+    }
+
+    private async Task ChangeSortDirection()
+    {
+        dir = dir == "asc" ? "desc" : "asc";
+        page = 1;
+        UpdateUrl(); // ✅ UPDATE URL
+        await ReloadStationsAsync();
+    }
+
+    private async Task NextPage()
+    {
+        page++;
+        UpdateUrl(); // ✅ UPDATE URL
+        await ReloadStationsAsync();
+    }
+
+    private async Task PrevPage()
+    {
+        if (page > 1)
+        {
+            page--;
+            UpdateUrl();  
+            await ReloadStationsAsync();
+        }
+    }
+
+    private void SelectStation(BikeStationDto station) => selectedStation = station;
+    private void ClearSelection() => selectedStation = null;
+
+    private void EditStation(BikeStationDto station)
+    {
+        editingStation = new BikeStationDto
+        {
+            id = station.id,
+            Number = station.Number,
+            ContractName = station.ContractName,
+            Name = station.Name,
+            Address = station.Address,
+            Lat = station.Lat,
+            Lng = station.Lng,
+            BikeStands = station.BikeStands,
+            AvailableBikes = station.AvailableBikes,
+            AvailableBikeStands = station.AvailableBikeStands,
+            Status = station.Status
+        };
+        isNewStation = false;
+        showEditModal = true;
+    }
+
+    private async Task DeleteStation(BikeStationDto station)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", 
+            $"Delete station #{station.Number} ({station.Name})?");
+        
+        if (!confirmed) return;
+
+        try
+        {
+            var success = await ApiClient.DeleteStationAsync(station.id);
+            if (success)
+            {
+                if (selectedStation?.Number == station.Number)
+                    ClearSelection();
+                await ReloadStationsAsync();
+            }
+            else
+            {
+                errorMessage = "Failed to delete station. API may not support DELETE.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error deleting: {ex.Message}";
+        }
+    }
+
+    private async Task HandleSave(BikeStationDto station)
+    {
+        try
+        {
+            bool success;
+            if (isNewStation)
+            {
+                station.id = station.Number.ToString();
+                success = await ApiClient.CreateStationAsync(station);
+            }
+            else
+            {
+                success = await ApiClient.UpdateStationAsync(station);
+            }
+
+            if (success)
+            {
+                HideModal();
+                await ReloadStationsAsync();
+            }
+            else
+            {
+                errorMessage = $"Failed to {(isNewStation ? "create" : "update")} station.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+    }
+
+    private void HideModal()
+    {
+        showEditModal = false;
+        editingStation = null;
+    }
+
+    // URL STATE MANAGEMENT
+    private void LoadStateFromUrl()
+    {
+        var uri = new Uri(Navigation.Uri);
+        var query = QueryHelpers.ParseQuery(uri.Query);
+
+        if (query.TryGetValue("q", out var q)) 
+            searchText = q;
+        if (query.TryGetValue("status", out var s)) 
+            statusFilter = s;
+        if (query.TryGetValue("minBikes", out var mb) && int.TryParse(mb, out var m)) 
+            minBikes = m;
+        if (query.TryGetValue("page", out var p) && int.TryParse(p, out var pg)) 
+            page = pg;
+        if (query.TryGetValue("sort", out var st)) 
+            sort = st;
+        if (query.TryGetValue("dir", out var d)) 
+            dir = d;
+    }
+
+    private void UpdateUrl()
+    {
+        var queryParams = new Dictionary<string, string?>
+        {
+            ["q"] = searchText,
+            ["status"] = statusFilter,
+            ["minBikes"] = minBikes?.ToString(),
+            ["page"] = page > 1 ? page.ToString() : null,
+            ["sort"] = sort,
+            ["dir"] = dir
+        };
+
+        Navigation.NavigateTo(
+            QueryHelpers.AddQueryString("/stations", queryParams),
+            replace: true);
+    }
+}

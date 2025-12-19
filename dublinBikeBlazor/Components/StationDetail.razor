@@ -1,0 +1,147 @@
+﻿@using dublinBikeBlazor.DTO
+
+<div class="station-detail">
+    <div class="detail-header">
+        <div>
+            <span class="detail-number">#@Station.Number</span>
+            <h3>@Station.Name</h3>
+        </div>
+        <button class="btn-close" @onclick="() => OnClose.InvokeAsync()">✕</button>
+    </div>
+
+    <div class="detail-content">
+        <!-- Status -->
+        <div class="detail-section">
+            <span class="status-badge-large status-@Station.Status.ToLower()">
+                @(Station.Status == "OPEN" ? "🟢" : "🔴") @Station.Status
+            </span>
+        </div>
+
+        <!-- Location -->
+        <div class="detail-section">
+            <h4>📍 Location</h4>
+            <p class="address">@Station.Address</p>
+            <div class="coordinates">
+                <small>
+                    <strong>Lat:</strong> @Station.Lat.ToString("F6") |
+                    <strong>Lng:</strong> @Station.Lng.ToString("F6")
+                </small>
+            </div>
+            <a href="@GetMapsUrl()"
+               target="_blank"
+               class="btn btn-sm btn-secondary mt-2">
+                🗺️ View on Google Maps
+            </a>
+        </div>
+
+        <!-- Availability -->
+        <div class="detail-section">
+            <h4>Availability</h4>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-icon">🚲</div>
+                    <div class="stat-value">@Station.AvailableBikes</div>
+                    <div class="stat-label">Available Bikes</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon">🅿️</div>
+                    <div class="stat-value">@Station.AvailableBikeStands</div>
+                    <div class="stat-label">Free Stands</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-icon">🏗️</div>
+                    <div class="stat-value">@Station.BikeStands</div>
+                    <div class="stat-label">Total Capacity</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Occupancy -->
+        <div class="detail-section">
+            <h4>Occupancy</h4>
+            <div class="occupancy-visual">
+                <div class="occupancy-bar-large">
+                    <div class="occupancy-fill occupancy-@GetOccupancyLevel()"
+                         style="width: @(Station.Occupancy * 100)%">
+                    </div>
+                </div>
+                <div class="occupancy-percentage">@(Station.Occupancy.ToString("P0"))</div>
+            </div>
+            <p class="occupancy-description">@GetOccupancyDescription()</p>
+        </div>
+
+        <!-- Additional Info -->
+        <div class="detail-section">
+            <h4>Additional Information</h4>
+            <dl class="info-list">
+                <dt>Contract:</dt>
+                <dd>@Station.ContractName</dd>
+                <dt>Station ID:</dt>
+                <dd>@Station.id</dd>
+                <dt>Last Updated:</dt>
+                <dd>@GetRelativeTime()</dd>
+            </dl>
+        </div>
+
+        <!-- Actions -->
+        <div class="detail-actions">
+            <button class="btn btn-primary" @onclick="() => OnEdit.InvokeAsync()">
+                ✏️ Edit Station
+            </button>
+             <button class="btn btn-danger" @onclick="() => OnDelete.InvokeAsync()">
+                🗑️ Delete Station
+            </button> 
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public BikeStationDto Station { get; set; } = new();
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public EventCallback OnEdit { get; set; }
+
+    [Parameter]
+    public EventCallback OnDelete { get; set; }
+
+    private string GetOccupancyLevel()
+    {
+        return Station.Occupancy switch
+        {
+            >= 0.8 => "high",
+            >= 0.5 => "medium",
+            _ => "low"
+        };
+    }
+
+    private string GetOccupancyDescription()
+    {
+        return Station.Occupancy switch
+        {
+            >= 0.9 => "Station is nearly full. Very few bikes available.",
+            >= 0.7 => "Station is quite busy. Limited bikes available.",
+            >= 0.5 => "Station has moderate availability.",
+            >= 0.3 => "Station has good availability.",
+            _ => "Station has excellent availability."
+        };
+    }
+
+    private string GetRelativeTime()
+    {
+        var span = DateTimeOffset.Now - Station.LastUpdateLocal;
+
+        if (span.TotalMinutes < 1) return "just now";
+        if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes} min ago";
+        if (span.TotalHours < 24) return $"{(int)span.TotalHours} hours ago";
+        return $"{(int)span.TotalDays} days ago";
+    }
+
+    private string GetMapsUrl()
+    {
+        return $"https://www.google.com/maps?q={Station.Lat},{Station.Lng}";
+    }
+}

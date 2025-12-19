@@ -1,0 +1,185 @@
+﻿@using System.Timers
+
+<div class="filters-container">
+    <h3>Filters</h3>
+
+    <div class="filter-group">
+        <label for="search-input">🔍 Search</label>
+        <input id="search-input"
+               type="text"
+               class="form-control"
+               placeholder="Search by name or address..."
+               value="@SearchText"
+               @oninput="HandleSearchInput" />
+        <small class="text-muted">Type to search...</small>
+    </div>
+
+    <div class="filter-group">
+        <label for="status-select">🚦 Status</label>
+        <select id="status-select"
+                class="form-select"
+                value="@(StatusFilter ?? "")"
+                @onchange="HandleStatusChange">
+            <option value="">All statuses</option>
+            <option value="OPEN">Open</option>
+            <option value="CLOSED">Closed</option>
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label for="min-bikes-input">
+            🚲 Min Bikes: <strong>@(MinBikes ?? 0)</strong>
+        </label>
+        <input id="min-bikes-input"
+               type="range"
+               class="form-range"
+               min="0"
+               max="40"
+               value="@(MinBikes ?? 0)"
+               @oninput="HandleMinBikesInput" />
+    </div>
+
+    @if (HasActiveFilters())
+    {
+        <div class="active-filters">
+            <small class="text-muted">Active filters:</small>
+            @if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                <div class="filter-tag">Search: "@SearchText"</div>
+            }
+            @if (!string.IsNullOrWhiteSpace(StatusFilter))
+            {
+                <div class="filter-tag">Status: @StatusFilter</div>
+            }
+            @if (MinBikes > 0)
+            {
+                <div class="filter-tag">Min bikes: @MinBikes</div>
+            }
+        </div>
+    }
+
+    <button class="btn btn-secondary w-100 mt-3"
+            @onclick="HandleClear"
+            disabled="@(!HasActiveFilters())">
+        Clear Filters
+    </button>
+</div>
+
+@code {
+    [Parameter]
+    public string? SearchText { get; set; }
+
+    [Parameter]
+    public string? StatusFilter { get; set; }
+
+    [Parameter]
+    public int? MinBikes { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnSearchChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> OnStatusChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<int?> OnMinBikesChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnClearFilters { get; set; }
+
+    private Timer? _debounceTimer;
+    private string? _pendingSearch;
+
+    protected override void OnInitialized()
+    {
+        _debounceTimer = new Timer(500); // 500ms debounce
+        _debounceTimer.Elapsed += OnDebounceElapsed;
+        _debounceTimer.AutoReset = false;
+
+        Console.WriteLine("[Filters] Component initialized");
+    }
+
+    private void HandleSearchInput(ChangeEventArgs e)
+    {
+        _pendingSearch = e.Value?.ToString();
+        Console.WriteLine($"[Filters] Search input: '{_pendingSearch}'");
+
+        _debounceTimer?.Stop();
+        _debounceTimer?.Start();
+    }
+
+    private async void OnDebounceElapsed(object? sender, ElapsedEventArgs e)
+    {
+        await InvokeAsync(async () =>
+        {
+            Console.WriteLine($"[Filters] Firing search changed: '{_pendingSearch}'");
+            await OnSearchChanged.InvokeAsync(_pendingSearch ?? "");
+            StateHasChanged();
+        });
+    }
+
+    private async Task HandleStatusChange(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString();
+        var statusValue = string.IsNullOrEmpty(value) ? null : value;
+
+        Console.WriteLine($"[Filters] Status changed to: '{statusValue}'");
+        await OnStatusChanged.InvokeAsync(statusValue);
+    }
+
+    private async Task HandleMinBikesInput(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var value))
+        {
+            var minBikesValue = value > 0 ? value : (int?)null;
+            Console.WriteLine($"[Filters] Min bikes changed to: {minBikesValue}");
+            await OnMinBikesChanged.InvokeAsync(minBikesValue);
+        }
+    }
+
+    private async Task HandleClear()
+    {
+        Console.WriteLine("[Filters] Clearing all filters");
+        await OnClearFilters.InvokeAsync();
+    }
+
+    private bool HasActiveFilters()
+    {
+        return !string.IsNullOrWhiteSpace(SearchText)
+            || !string.IsNullOrWhiteSpace(StatusFilter)
+            || (MinBikes.HasValue && MinBikes > 0);
+    }
+
+    public void Dispose()
+    {
+        _debounceTimer?.Dispose();
+    }
+}
+
+<style>
+    .active-filters {
+        background: #f8f9fa;
+        padding: 0.75rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+
+    .filter-tag {
+        display: inline-block;
+        background: white;
+        border: 1px solid #dee2e6;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        margin: 0.25rem;
+        font-size: 0.875rem;
+    }
+
+    .text-muted {
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+
+    .mt-3 {
+        margin-top: 1rem;
+    }
+</style>

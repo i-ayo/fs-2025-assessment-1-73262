@@ -1,0 +1,70 @@
+﻿@using dublinBikeBlazor.DTO
+
+<div class="station-card @(IsSelected ? "selected" : "")" 
+     @onclick="OnClick"
+     tabindex="0">
+    
+    <div class="station-header">
+        <span class="station-number">#@Station.Number</span>
+        <span class="status-badge status-@Station.Status.ToLower()">
+            @Station.Status
+        </span>
+    </div>
+
+    <h4 class="station-name">@Station.Name</h4>
+    <p class="station-address">📍 @Station.Address</p>
+
+    <div class="availability">
+        <div class="stat">
+            <span class="icon">🚲</span>
+            <strong>@Station.AvailableBikes</strong> bikes
+        </div>
+        <div class="stat">
+            <span class="icon">🅿️</span>
+            <strong>@Station.AvailableBikeStands</strong> stands
+        </div>
+    </div>
+
+    <div class="occupancy-bar">
+        <div class="occupancy-fill occupancy-@GetOccupancyLevel()" 
+             style="width: @(Station.Occupancy * 100)%">
+        </div>
+    </div>
+    <small class="occupancy-text">@(Station.Occupancy.ToString("P0")) full</small>
+
+    <div class="card-actions">
+        <button class="btn-sm" @onclick="OnEdit" @onclick:stopPropagation="true">
+            ✏️ Edit
+        </button>
+        <button class="btn-sm" @onclick="OnDelete" @onclick:stopPropagation="true">
+            🗑️ Delete
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public BikeStationDto Station { get; set; } = new();
+
+    [Parameter]
+    public bool IsSelected { get; set; }
+
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    [Parameter]
+    public EventCallback OnEdit { get; set; }
+
+    [Parameter]
+    public EventCallback OnDelete { get; set; }
+
+    private string GetOccupancyLevel()
+    {
+        return Station.Occupancy switch
+        {
+            >= 0.8 => "high",
+            >= 0.5 => "medium",
+            _ => "low"
+        };
+    }
+}
