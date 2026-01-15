@@ -20,7 +20,7 @@ permissions:
 env:
   DOTNET_VERSION: "8.0.x"
   # Point this to your xUnit test project (csproj). Adjust as needed. Minor change
-  TEST_PROJECT: "fs_2025_dublinbike_API.Tests/fs_2025_dublinbike_API.Tests.csproj"
+  TEST_PROJECT: "fs_2025_dublinbike_API.Tests"
 
 jobs:
   build-and-test:
